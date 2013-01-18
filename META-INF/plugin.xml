@@ -1,0 +1,80 @@
+<idea-plugin version="2">
+  <id>org.nuxeo.intellij</id>
+  <name>Nuxeo</name>
+  <version>0.1</version>
+  <vendor email="throger@gmail.com">Thomas Roger</vendor>
+
+  <description>
+    <![CDATA[
+      <p>Plugin for Nuxeo support.<p>
+
+      <p>Supported features:</p>
+      <ul>
+        <li>Registration of Nuxeo SDKs;</li>
+        <li>Selection of the default SDK to use;</li>
+        <li>Auto detection of Nuxeo modules;</li>
+        <li>Hot reload of Nuxeo module marked as hot reloadable.</li>
+      </ul>
+
+      <p>Source code: <a href="https://github.com/troger/nuxeo-intellij">https://github.com/troger/nuxeo-intellij</a></p>
+
+      <p>This plugin is not officially supported by Nuxeo, but you
+      can ask questions via <a href="http://answers.nuxeo.com">Nuxeo Answers</a>.</p>
+    ]]>
+  </description>
+
+  <change-notes>
+    <![CDATA[
+      <p>0.1</p>
+      <ul>
+        <li>Initial release</li>
+      </ul>
+    ]]>
+  </change-notes>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+  <idea-version since-build="123.72" />
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+  <depends>com.intellij.properties</depends>
+
+  <application-components>
+    <component>
+      <implementation-class>org.nuxeo.intellij.NuxeoPlugin</implementation-class>
+    </component>
+  </application-components>
+
+  <project-components>
+    <component>
+      <implementation-class>org.nuxeo.intellij.NuxeoSDKManager</implementation-class>
+      <loadForDefaultProject/>
+    </component>
+  </project-components>
+
+  <actions>
+    <action id="org.nuxeo.intellij.HotReload" class="org.nuxeo.intellij.actions.HotReloadAction" text="Nuxeo Hot _Reload" description="Hot reload Nuxeo modules">
+      <keyboard-shortcut first-keystroke="control alt R" keymap="$default" />
+    </action>
+
+    <group id="org.nuxeo.intellij.NuxeoGroup" text="_Nuxeo" description="Nuxeo">
+      <reference ref="org.nuxeo.intellij.HotReload" />
+
+      <!--adds this group to the main menu-->
+      <add-to-group group-id="MainMenu" anchor="before" relative-to-action="VcsGroups" />
+    </group>
+  </actions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectConfigurable instance="org.nuxeo.intellij.ui.NuxeoProjectConfigurable" id="org.nuxeo.intellij.nuxeo" displayName="Nuxeo">
+      <configurable instance="org.nuxeo.intellij.ui.NuxeoSDKsPanel" id="org.nuxeo.intellij.nuxeo.sdks"
+        displayName="Nuxeo SDKs"/>
+    </projectConfigurable>
+
+    <facetType implementation="org.nuxeo.intellij.facet.NuxeoFacetType"/>
+    <framework.detector implementation="org.nuxeo.intellij.facet.NuxeoFrameworkDetector"/>
+  </extensions>
+</idea-plugin>
