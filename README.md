@@ -46,12 +46,7 @@ To configure and add a new Nuxeo SDK:
 To make the hot reload work, you need to deploy the `sdk` Nuxeo template:
 
 * Edit the file `NUXEO_HOME/bin/nuxeo.conf`
-* Find the line setting the `nuxeo.templates` and add the `sdk` template. For a default installation you will end up with:
-
-    …
-    nuxeo.templates=default,sdk
-    …
-
+* Find the line setting the `nuxeo.templates` and add the `sdk` template. For a default installation you will end up with `nuxeo.templates=default,sdk`
 * Launch Nuxeo
 
 #### Configure the modules
