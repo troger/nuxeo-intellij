@@ -37,10 +37,11 @@ public final class NuxeoSDKChooser {
 
         @Override
         public boolean isFileSelectable(VirtualFile file) {
+            VirtualFile nxserverFolder = file.findChild(NXSERVER_FOLDER_NAME);
+            VirtualFile sdkFolder = file.findChild(SDK_FOLDER_NAME);
             return file.isDirectory() && file.isValid()
-                    && file.findChild(NXSERVER_FOLDER_NAME) != null
-                    && file.findChild(SDK_FOLDER_NAME) != null
-                    && file.findChild(COMPONENTS_INDEX_NAME) != null;
+                    && nxserverFolder != null && sdkFolder != null
+                    && sdkFolder.findChild(COMPONENTS_INDEX_NAME) != null;
         }
     }
 }
