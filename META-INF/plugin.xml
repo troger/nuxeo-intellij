@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>org.nuxeo.intellij</id>
   <name>Nuxeo</name>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <vendor email="throger@gmail.com">Thomas Roger</vendor>
 
   <description>
@@ -28,6 +28,10 @@
       <p>0.1</p>
       <ul>
         <li>Initial release</li>
+      </ul>
+      <p>0.2</p>
+      <ul>
+        <li>Fix detection of Nuxeo SDK folder</li>
       </ul>
     ]]>
   </change-notes>
