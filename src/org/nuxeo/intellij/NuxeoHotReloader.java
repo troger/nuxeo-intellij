@@ -113,7 +113,7 @@ public class NuxeoHotReloader {
 
     public void hotReloadNuxeoModules() {
         if (hotReloadableModules.isEmpty()) {
-            NuxeoNotification.show(project, "",
+            NuxeoNotification.show(project,
                     "No Nuxeo module to hot reload", NotificationType.WARNING);
             return;
         }
@@ -147,14 +147,14 @@ public class NuxeoHotReloader {
             String message;
             if (hotReloadableModules.size() == 1) {
                 message = String.format(
-                        "Successfully hot reloaded %s Nuxeo module",
+                        "Successfully hot reloaded %s module",
                         hotReloadableModules.get(0).getName());
             } else {
                 message = String.format(
-                        "Successfully hot reloaded %d Nuxeo module(s)",
+                        "Successfully hot reloaded %d module(s)",
                         hotReloadableModules.size());
             }
-            NuxeoNotification.show(project, "", message,
+            NuxeoNotification.show(project, message,
                     NotificationType.INFORMATION);
         } catch (NuxeoHotReloadException e) {
             NuxeoNotification.show(project,

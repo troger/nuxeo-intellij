@@ -29,4 +29,9 @@ public class NuxeoNotification {
         });
     }
 
+    public static void show(final Project project,
+                            String content, NotificationType type) {
+        show(project, NUXEO_GROUP, content, type);
+    }
+
 }
