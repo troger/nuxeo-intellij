@@ -60,12 +60,18 @@
   </project-components>
 
   <actions>
-    <action id="org.nuxeo.intellij.HotReload" class="org.nuxeo.intellij.actions.HotReloadAction" text="Nuxeo Hot _Reload" description="Hot reload Nuxeo modules">
+    <action id="org.nuxeo.intellij.actions.HotReload" class="org.nuxeo.intellij.actions.HotReloadAction"
+      text="Hot _Reload" description="Hot reload Nuxeo modules">
       <keyboard-shortcut first-keystroke="control alt R" keymap="$default" />
+    </action>
+    <action id="org.nuxeo.intellij.actions.ManageSDKs" class="org.nuxeo.intellij.actions.ManageSDKsAction"
+      text="Manage Nuxeo SDKs" description="Manage configured Nuxeo SDKs">
     </action>
 
     <group id="org.nuxeo.intellij.NuxeoGroup" text="_Nuxeo" description="Nuxeo">
-      <reference ref="org.nuxeo.intellij.HotReload" />
+      <reference ref="org.nuxeo.intellij.actions.HotReload" />
+      <separator/>
+      <reference ref="org.nuxeo.intellij.actions.ManageSDKs" />
 
       <!--adds this group to the main menu-->
       <add-to-group group-id="MainMenu" anchor="before" relative-to-action="VcsGroups" />
