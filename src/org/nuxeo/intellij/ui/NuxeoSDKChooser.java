@@ -16,7 +16,9 @@ public final class NuxeoSDKChooser {
 
     public static final String SDK_FOLDER_NAME = "sdk";
 
-    public static final String COMPONENTS_INDEX_NAME = "components.index";
+    public static final String SOURCES_FOLDER_NAME = "sources";
+
+    public static final String TESTS_FOLDER_NAME = "tests";
 
     private static final NuxeoSDKChooserDescriptor descriptor = new NuxeoSDKChooserDescriptor();
 
@@ -37,11 +39,21 @@ public final class NuxeoSDKChooser {
 
         @Override
         public boolean isFileSelectable(VirtualFile file) {
+            if (!file.isDirectory() && !file.isValid()) {
+                return false;
+            }
+
             VirtualFile nxserverFolder = file.findChild(NXSERVER_FOLDER_NAME);
             VirtualFile sdkFolder = file.findChild(SDK_FOLDER_NAME);
-            return file.isDirectory() && file.isValid()
-                    && nxserverFolder != null && sdkFolder != null
-                    && sdkFolder.findChild(COMPONENTS_INDEX_NAME) != null;
+            if (nxserverFolder == null || sdkFolder == null) {
+                return false;
+            }
+
+            VirtualFile sourcesFolder = sdkFolder.findChild(SOURCES_FOLDER_NAME);
+            VirtualFile testsFolder = sdkFolder.findChild(TESTS_FOLDER_NAME);
+            return sourcesFolder != null && testsFolder != null
+                    && sourcesFolder.getChildren().length > 0
+                    && testsFolder.getChildren().length > 0;
         }
     }
 }
