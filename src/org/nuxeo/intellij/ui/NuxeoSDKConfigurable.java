@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,8 @@ public class NuxeoSDKConfigurable extends NamedConfigurable<NuxeoSDK> {
     private JPanel wholePanel;
 
     private TextFieldWithBrowseButton pathTextField;
+
+    private JButton configureButton;
 
     private final Project project;
 
@@ -65,6 +68,28 @@ public class NuxeoSDKConfigurable extends NamedConfigurable<NuxeoSDK> {
                 pathTextField.setText(sdk.getPath());
             }
         });
+        configureButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                NuxeoSDKManager nuxeoSDKManager = NuxeoSDKManager.getInstance(project);
+                if (nuxeoSDKManager.isConfigured(nuxeoSDK)) {
+                    Messages.showMessageDialog(project,
+                            "Nuxeo SDK already configured.", "Information",
+                            Messages.getInformationIcon());
+                } else {
+                    if (nuxeoSDKManager.configure(project, nuxeoSDK)) {
+                        Messages.showMessageDialog(project,
+                                "Nuxeo SDK successfully configured",
+                                "Information", Messages.getInformationIcon());
+                    } else {
+                        Messages.showMessageDialog(project,
+                                "Cannot configure Nuxeo SDK", "Error",
+                                Messages.getErrorIcon());
+                    }
+                }
+            }
+        });
+
         return wholePanel;
     }
 
