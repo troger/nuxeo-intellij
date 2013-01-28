@@ -31,14 +31,6 @@ You can find the latest release of Nuxeo SDK here: [nuxeo-cap-5.6-tomcat-sdk.zip
 
 To find the latest snapshot of Nuxeo SDK, you can go [here](https://maven-eu.nuxeo.org/nexus/index.html#nexus-search;gav~org.nuxeo.ecm.distribution~nuxeo-distribution-tomcat~5.7-SNAPSHOT~~nuxeo-cap-sdk).
 
-### Add a Nuxeo SDK
-
-To configure and add a new Nuxeo SDK:
-
-1. Go to the project settings and select Nuxeo / Nuxeo SDKs
-2. Click the "+" buton to add a Nuxeo SDK, give it a name and save
-3. Reopen the project settings, select Nuxeo and configure the default SDK to use
-
 ### Hot reload modules
 
 #### Configure your Nuxeo SDK
@@ -48,6 +40,14 @@ To make the hot reload work, you need to deploy the `sdk` Nuxeo template:
 * Edit the file `NUXEO_HOME/bin/nuxeo.conf`
 * Find the line setting the `nuxeo.templates` and add the `sdk` template. For a default installation you will end up with `nuxeo.templates=default,sdk`
 * Launch Nuxeo
+
+#### Add the Nuxeo SDK
+
+To configure and add a new Nuxeo SDK:
+
+1. Go to the project settings and select Nuxeo / Nuxeo SDKs
+2. Click the "+" buton to add a Nuxeo SDK, give it a name and save
+3. Reopen the project settings, select Nuxeo and configure the default SDK to use
 
 #### Configure the modules
 
