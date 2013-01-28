@@ -1,6 +1,7 @@
 package org.nuxeo.intellij;
 
 import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
@@ -18,9 +19,9 @@ public class NuxeoNotification {
     }
 
     public static void show(final Project project, String title,
-            String content, NotificationType type) {
+            String content, NotificationType type, NotificationListener listener) {
         final Notification notification = new Notification(NUXEO_GROUP, title,
-                content, type);
+                content, type, listener);
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -29,9 +30,19 @@ public class NuxeoNotification {
         });
     }
 
-    public static void show(final Project project,
+    public static void show(final Project project, String title,
                             String content, NotificationType type) {
-        show(project, NUXEO_GROUP, content, type);
+        show(project, title, content, type, null);
+    }
+
+    public static void show(final Project project, String content,
+            NotificationType type, NotificationListener listener) {
+        show(project, NUXEO_GROUP, content, type, listener);
+    }
+
+    public static void show(final Project project, String content,
+            NotificationType type) {
+        show(project, NUXEO_GROUP, content, type, null);
     }
 
 }

@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationListener;
+import com.intellij.openapi.options.ShowSettingsUtil;
 import org.jetbrains.annotations.NotNull;
 import org.nuxeo.intellij.facet.NuxeoFacet;
 import org.nuxeo.intellij.facet.NuxeoFacetConfiguration;
@@ -45,6 +48,8 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import com.intellij.util.xml.ModuleContentRootSearchScope;
+
+import javax.swing.event.HyperlinkEvent;
 
 /**
  * Main class handling the hot reload of Nuxeo modules marked as hot reloadable.
@@ -117,6 +122,25 @@ public class NuxeoHotReloader {
                     "No Nuxeo module to hot reload", NotificationType.WARNING);
             return;
         }
+        NuxeoSDKManager nuxeoSDKManager = NuxeoSDKManager.getInstance(project);
+        if (nuxeoSDKManager.getDefaultNuxeoSDK() == null) {
+            NuxeoNotification.show(
+                    project,
+                    "No default Nuxeo SDK configured <a href='configure'>Configure</a>",
+                    NotificationType.ERROR, new NotificationListener() {
+                        @Override
+                        public void hyperlinkUpdate(@NotNull
+                        Notification notification, @NotNull
+                        HyperlinkEvent event) {
+                            if (event.getDescription().equals("configure")) {
+                                ShowSettingsUtil.getInstance().showSettingsDialog(
+                                        project, "Nuxeo");
+                            }
+                        }
+                    });
+            return;
+        }
+
         compiledAndHotReloadModules();
     }
 
