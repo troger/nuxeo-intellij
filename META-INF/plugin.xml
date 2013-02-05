@@ -13,7 +13,8 @@
         <li>Registration of Nuxeo SDKs;</li>
         <li>Selection of the default SDK to use;</li>
         <li>Auto detection of Nuxeo modules;</li>
-        <li>Hot reload of Nuxeo module marked as hot reloadable.</li>
+        <li>Hot reload of Nuxeo module marked as hot reloadable;</li>
+        <li>Integrated Nuxeo Shell.</li>
       </ul>
 
       <p>Source code: <a href="https://github.com/troger/nuxeo-intellij">https://github.com/troger/nuxeo-intellij</a></p>
@@ -68,12 +69,17 @@
       text="Hot _Reload" description="Hot reload Nuxeo modules">
       <keyboard-shortcut first-keystroke="control alt R" keymap="$default" />
     </action>
+    <action id="org.nuxeo.intellij.actions.NuxeoShell" class="org.nuxeo.intellij.actions.NuxeoShellAction"
+      text="Nuxeo Shell" description="Show Nuxeo Shell">
+    </action>
     <action id="org.nuxeo.intellij.actions.ManageSDKs" class="org.nuxeo.intellij.actions.ManageSDKsAction"
       text="Manage Nuxeo SDKs" description="Manage configured Nuxeo SDKs">
     </action>
 
     <group id="org.nuxeo.intellij.NuxeoGroup" text="_Nuxeo" description="Nuxeo">
       <reference ref="org.nuxeo.intellij.actions.HotReload" />
+      <separator/>
+      <reference ref="org.nuxeo.intellij.actions.NuxeoShell" />
       <separator/>
       <reference ref="org.nuxeo.intellij.actions.ManageSDKs" />
 
