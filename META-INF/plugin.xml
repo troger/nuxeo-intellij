@@ -57,6 +57,10 @@
       <implementation-class>org.nuxeo.intellij.NuxeoSDKManager</implementation-class>
       <loadForDefaultProject/>
     </component>
+    <component>
+      <implementation-class>org.nuxeo.intellij.shell.NuxeoShellComponent</implementation-class>
+      <loadForDefaultProject/>
+    </component>
   </project-components>
 
   <actions>

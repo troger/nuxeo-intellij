@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="jdk" jdkName="IDEA IU-123.123" jdkType="IDEA JDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="nuxeo-shell-5.6" level="project" />
   </component>
 </module>
 
