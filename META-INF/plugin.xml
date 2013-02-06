@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>org.nuxeo.intellij</id>
   <name>Nuxeo</name>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3</version>
   <vendor email="throger@gmail.com">Thomas Roger</vendor>
 
   <description>
@@ -26,13 +26,20 @@
 
   <change-notes>
     <![CDATA[
-      <p>0.1</p>
+      <p>0.3</p>
       <ul>
-        <li>Initial release</li>
+        <li>Better detection of Nuxeo SDK</li>
+        <li>Ability to configure a Nuxeo SDK to enable hot reload</li>
+        <li>Integration of Nuxeo Shell as a tool window</li>
+        <li>Prettier notifications</li>
       </ul>
       <p>0.2</p>
       <ul>
         <li>Fix detection of Nuxeo SDK folder</li>
+      </ul>
+      <p>0.1</p>
+      <ul>
+        <li>Initial release</li>
       </ul>
     ]]>
   </change-notes>
