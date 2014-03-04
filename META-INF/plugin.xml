@@ -37,7 +37,7 @@
     ]]>
   </change-notes>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+  <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
   <idea-version since-build="123.72" />
 
   <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
@@ -66,35 +66,31 @@
 
   <actions>
     <action id="org.nuxeo.intellij.actions.HotReload" class="org.nuxeo.intellij.actions.HotReloadAction"
-      text="Hot _Reload" description="Hot reload Nuxeo modules">
+      text="Hot _Reload" description="Hot reload Nuxeo modules" icon="/icons/nuxeo-reload.png">
       <keyboard-shortcut first-keystroke="control alt R" keymap="$default" />
     </action>
     <action id="org.nuxeo.intellij.actions.NuxeoShell" class="org.nuxeo.intellij.actions.NuxeoShellAction"
-      text="Nuxeo Shell" description="Show Nuxeo Shell">
+      text="Nuxeo Shell" description="Show Nuxeo Shell" icon="/icons/nuxeo-facet.png">
     </action>
     <action id="org.nuxeo.intellij.actions.ManageSDKs" class="org.nuxeo.intellij.actions.ManageSDKsAction"
-      text="Manage Nuxeo SDKs" description="Manage configured Nuxeo SDKs">
+      text="Manage Nuxeo SDKs" description="Manage configured Nuxeo SDKs" icon="/icons/nuxeo-sdks.png">
     </action>
 
-    <group id="org.nuxeo.intellij.NuxeoGroup" text="_Nuxeo" description="Nuxeo">
-      <reference ref="org.nuxeo.intellij.actions.HotReload" />
-      <separator/>
+    <group id="org.nuxeo.intellij.NuxeoGroup" text="_Nuxeo" description="Nuxeo" icon="/icons/nuxeo.png">
       <reference ref="org.nuxeo.intellij.actions.NuxeoShell" />
       <separator/>
+      <reference ref="org.nuxeo.intellij.actions.HotReload" />
+      <separator/>
       <reference ref="org.nuxeo.intellij.actions.ManageSDKs" />
-
       <!--adds this group to the main menu-->
       <add-to-group group-id="MainMenu" anchor="before" relative-to-action="VcsGroups" />
     </group>
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
-    <projectConfigurable instance="org.nuxeo.intellij.ui.NuxeoProjectConfigurable" id="org.nuxeo.intellij.nuxeo" displayName="Nuxeo">
-      <configurable instance="org.nuxeo.intellij.ui.NuxeoSDKsPanel" id="org.nuxeo.intellij.nuxeo.sdks"
-        displayName="Nuxeo SDKs"/>
-    </projectConfigurable>
-
+    <projectConfigurable instance="org.nuxeo.intellij.ui.NuxeoProjectConfigurable" id="org.nuxeo.intellij.nuxeo" displayName="Nuxeo" dynamic="true"/>
     <facetType implementation="org.nuxeo.intellij.facet.NuxeoFacetType"/>
     <framework.detector implementation="org.nuxeo.intellij.facet.NuxeoFrameworkDetector"/>
+    <toolWindow id="Nuxeo Server" icon="/icons/nuxeo.png" anchor="bottom" factoryClass="org.nuxeo.intellij.server.NuxeoServerWindowFactory"/>
   </extensions>
 </idea-plugin>

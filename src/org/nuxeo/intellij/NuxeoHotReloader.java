@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationListener;
+import com.intellij.openapi.compiler.CompilerPaths;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import org.jetbrains.annotations.NotNull;
 import org.nuxeo.intellij.facet.NuxeoFacet;
@@ -77,11 +79,7 @@ public class NuxeoHotReloader {
 
     private Project project;
 
-    private final List<Module> hotReloadableModules;
-
-    private int moduleIndex = 0;
-
-    private Module currentModule;
+    private final Module[] hotReloadableModules;
 
     private final StringBuilder devBundlesContentBuilder = new StringBuilder();
 
@@ -90,18 +88,18 @@ public class NuxeoHotReloader {
         hotReloadableModules = getHotReloadableModules();
     }
 
-    private List<Module> getHotReloadableModules() {
-        List<Module> modules = getModules();
+    private Module[] getHotReloadableModules() {
+        Module[] modules = getModules();
         modules = filterHotReloadableModules(modules);
         return modules;
     }
 
-    private List<Module> getModules() {
+    private Module[] getModules() {
         ModuleManager moduleManager = ModuleManager.getInstance(project);
-        return Arrays.asList(moduleManager.getModules());
+        return moduleManager.getModules();
     }
 
-    private List<Module> filterHotReloadableModules(List<Module> modules) {
+    private Module[] filterHotReloadableModules(Module[] modules) {
         List<Module> filteredModules = new ArrayList<Module>();
         for (Module module : modules) {
             FacetManager facetManager = FacetManager.getInstance(module);
@@ -113,11 +111,11 @@ public class NuxeoHotReloader {
                 }
             }
         }
-        return filteredModules;
+        return filteredModules.toArray(new Module[0]);
     }
 
     public void hotReloadNuxeoModules() {
-        if (hotReloadableModules.isEmpty()) {
+        if (hotReloadableModules.length == 0) {
             NuxeoNotification.show(project,
                     "No Nuxeo module to hot reload", NotificationType.WARNING);
             return;
@@ -145,22 +143,16 @@ public class NuxeoHotReloader {
     }
 
     private void compiledAndHotReloadModules() {
-        compileAndHotReloadNextModule();
-    }
-
-    private void compileAndHotReloadNextModule() {
-        if (moduleIndex >= hotReloadableModules.size()) {
-            triggerHotReload();
-            return;
-        }
-
-        currentModule = hotReloadableModules.get(moduleIndex);
         CompilerManager compilerManager = CompilerManager.getInstance(project);
-        compilerManager.compile(currentModule, new CompileStatusNotification() {
+        compilerManager.make(project, hotReloadableModules, new CompileStatusNotification() {
             @Override
             public void finished(boolean aborted, int errors, int warnings,
-                    CompileContext compileContext) {
-                onCompilationFinished(aborted, errors, compileContext);
+                                 CompileContext compileContext) {
+                if (!aborted && errors == 0) {
+                    // TODO - consider reloading all the affected modules
+                    // final Module[] affectedModules = compileContext.getCompileScope().getAffectedModules();
+                    prepareModules(hotReloadableModules);
+                }
             }
         });
     }
@@ -169,14 +161,14 @@ public class NuxeoHotReloader {
         try {
             writeDevBundlesFile(devBundlesContentBuilder.toString());
             String message;
-            if (hotReloadableModules.size() == 1) {
+            if (hotReloadableModules.length == 1) {
                 message = String.format(
                         "Successfully hot reloaded %s module",
-                        hotReloadableModules.get(0).getName());
+                        hotReloadableModules[0].getName());
             } else {
                 message = String.format(
                         "Successfully hot reloaded %d module(s)",
-                        hotReloadableModules.size());
+                        hotReloadableModules.length);
             }
             NuxeoNotification.show(project, message,
                     NotificationType.INFORMATION);
@@ -214,31 +206,50 @@ public class NuxeoHotReloader {
         }
     }
 
-    private void onCompilationFinished(boolean aborted, int errors,
-            final CompileContext compileContext) {
-        if (!aborted && errors == 0) {
-            ProgressManager.getInstance().run(
-                    new Task.Backgroundable(project, "Nuxeo Hot Reload") {
-                        @Override
-                        public void run(@NotNull
-                        final ProgressIndicator indicator) {
-                            try {
-                                indicator.setText("Hot reloading Nuxeo module");
-                                indicator.setText2(currentModule.getName());
-                                prepareCurrentModule(compileContext);
-                            } finally {
-                                indicator.stop();
+    private void prepareModules(Module[] affectedModules) {
+        final AtomicInteger modulesToProcess = new AtomicInteger(affectedModules.length);
+        for (final Module module : affectedModules) {
+            new Task.Backgroundable(project, "Nuxeo Hot Reload") {
+                @Override
+                public void run(@NotNull
+                final ProgressIndicator indicator) {
+                    try {
+                        indicator.setText("Hot reloading Nuxeo module");
+                        indicator.setText2(module.getName());
+                        prepareModule(module, new HotReloadListener(module) {
+                            @Override
+                            public void onModulePrepared() {
+                                devBundlesContentBuilder
+                                        .append("# Module ").append(module.getName())
+                                        .append(NEW_LINE)
+                                        .append("bundle:").append(getPojoBinDirectory().getCanonicalPath())
+                                        .append(NEW_LINE);
+                                if (getSeamBinDirectory() != null) {
+                                    devBundlesContentBuilder.append("seam:").append(
+                                            getSeamBinDirectory().getCanonicalPath()).append(NEW_LINE);
+                                }
+                                for (VirtualFile resource: getResources()) {
+                                    devBundlesContentBuilder.append("resourceBundleFragment:").append(
+                                            getPojoBinDirectory().getCanonicalPath()).append("/OSGI-INF/l10n/").append(
+                                            resource.getName()).append(NEW_LINE);
+                                }
+                                devBundlesContentBuilder.append(NEW_LINE);
+                                // Check if we're done with all the modules
+                                if (modulesToProcess.decrementAndGet() == 0) {
+                                    triggerHotReload();
+                                }
                             }
-                        }
-                    });
+                        });
+                    } finally {
+                        indicator.stop();
+                    }
+                }
+            }.queue();
         }
     }
 
-    private void prepareCurrentModule(final CompileContext compileContext) {
-        final Project project = compileContext.getProject();
+    private void prepareModule(final Module module, final HotReloadListener listener) {
         try {
-            devBundlesContentBuilder.append("# Module ").append(
-                    currentModule.getName()).append(NEW_LINE);
 
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 @Override
@@ -247,7 +258,7 @@ public class NuxeoHotReloader {
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    prepareModule(currentModule, compileContext);
+                                    prepareModuleClasses(module, listener);
                                 }
                             });
                 }
@@ -259,7 +270,7 @@ public class NuxeoHotReloader {
         }
     }
 
-    private void prepareModule(Module module, CompileContext compileContext) {
+    private void prepareModuleClasses(Module module, final HotReloadListener listener) {
         VirtualFile moduleFile = module.getModuleFile();
         if (moduleFile == null) {
             return;
@@ -269,9 +280,8 @@ public class NuxeoHotReloader {
         VirtualFile pojoBinDirectory = createPojoBinDirectory(moduleDirectoryPath);
         VirtualFile seamBinDirectory = createSeamBinDirectory(moduleDirectoryPath);
 
-        prepareCompiledClassesAndResources(pojoBinDirectory, module,
-                compileContext);
-        prepareSeamClasses(seamBinDirectory, pojoBinDirectory, module);
+        prepareCompiledClassesAndResources(pojoBinDirectory, module, listener);
+        prepareSeamClasses(seamBinDirectory, pojoBinDirectory, module, listener);
     }
 
     private VirtualFile createPojoBinDirectory(String moduleDirectoryPath) {
@@ -337,8 +347,9 @@ public class NuxeoHotReloader {
 
     private void prepareCompiledClassesAndResources(
             VirtualFile pojoBinDirectory, Module module,
-            CompileContext compileContext) {
-        VirtualFile outputDirectory = compileContext.getModuleOutputDirectory(module);
+            final HotReloadListener listener) {
+
+        VirtualFile outputDirectory = CompilerPaths.getModuleOutputDirectory(module, false);
         if (outputDirectory == null) {
             // no output directory, nothing to do
             return;
@@ -355,12 +366,11 @@ public class NuxeoHotReloader {
                     pojoBinDirectory.getCanonicalPath()));
         }
         pojoBinDirectory.refresh(false, true);
-        devBundlesContentBuilder.append("bundle:").append(
-                pojoBinDirectory.getCanonicalPath()).append(NEW_LINE);
+        listener.onCompiledClassesPrepared(pojoBinDirectory);
     }
 
     private void prepareSeamClasses(final VirtualFile seamBinDirectory,
-            final VirtualFile pojoBinDirectory, final Module module) {
+            final VirtualFile pojoBinDirectory, final Module module, final HotReloadListener listener) {
         DumbService.getInstance(project).runWhenSmart(new Runnable() {
             @Override
             public void run() {
@@ -371,13 +381,11 @@ public class NuxeoHotReloader {
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        moveSeamClasses(seamBinDirectory,
+                                        boolean hasSeamClasses = moveSeamClasses(seamBinDirectory,
                                                 pojoBinDirectory, module);
-                                        prepareResourceBundles(module,
-                                                pojoBinDirectory);
-                                        devBundlesContentBuilder.append(NEW_LINE);
-                                        moduleIndex += 1; // next module
-                                        compileAndHotReloadNextModule();
+                                        List<VirtualFile> resources = prepareResourceBundles(module);
+                                        listener.onResourcesPrepared(resources);
+                                        listener.onSeamClassesPrepared((hasSeamClasses) ? seamBinDirectory : null);
                                     }
                                 });
                     }
@@ -387,20 +395,17 @@ public class NuxeoHotReloader {
         });
     }
 
-    private void moveSeamClasses(VirtualFile seamBinDirectory,
+    private boolean moveSeamClasses(VirtualFile seamBinDirectory,
             VirtualFile pojoBinDirectory, Module module) {
         PsiClass seamAnnotationClass = findSeamAnnotationClass(module);
         if (seamAnnotationClass == null) {
             // no Seam annotation class, nothing to do
-            return;
+            return false;
         }
 
         Collection<PsiClass> seamClasses = findSeamClasses(seamAnnotationClass,
                 module);
-        if (moveSeamClasses(seamBinDirectory, pojoBinDirectory, seamClasses)) {
-            devBundlesContentBuilder.append("seam:").append(
-                    seamBinDirectory.getCanonicalPath()).append(NEW_LINE);
-        }
+        return moveSeamClasses(seamBinDirectory, pojoBinDirectory, seamClasses);
     }
 
     private PsiClass findSeamAnnotationClass(Module module) {
@@ -469,11 +474,13 @@ public class NuxeoHotReloader {
         return false;
     }
 
-    private void prepareResourceBundles(Module module,
-            VirtualFile pojoBinDirectory) {
+    private List<VirtualFile> prepareResourceBundles(Module module) {
+
+        List<VirtualFile> resourceFiles = new ArrayList<VirtualFile>();
+
         VirtualFile moduleFile = module.getModuleFile();
         if (moduleFile == null) {
-            return;
+            return resourceFiles;
         }
 
         VirtualFile moduleDirectory = moduleFile.getParent();
@@ -484,21 +491,71 @@ public class NuxeoHotReloader {
             for (VirtualFile child : l10nDirectory.getChildren()) {
                 PsiFile file = psiManager.findFile(child);
                 if (file instanceof PropertiesFile) {
-                    addResourceBundleFragment(pojoBinDirectory, file);
+                    resourceFiles.add(child);
                 }
             }
         }
-    }
-
-    private void addResourceBundleFragment(VirtualFile pojoBinDirectory,
-            PsiFile propertiesFile) {
-        devBundlesContentBuilder.append("resourceBundleFragment:").append(
-                pojoBinDirectory.getCanonicalPath()).append("/OSGI-INF/l10n/").append(
-                propertiesFile.getName()).append(NEW_LINE);
+        return resourceFiles;
     }
 
     private boolean deleteIfExists(File f) {
         return !f.exists() || f.delete();
     }
 
+    private abstract class HotReloadListener {
+
+        private Module module;
+        private List<VirtualFile> resources;
+        private boolean resourcesDone = false;
+        private VirtualFile pojoBinDirectory;
+        private boolean compiledClassesDone = false;
+        private VirtualFile seamBinDirectory;
+        private boolean seamClassesDone = false;
+
+        public HotReloadListener(Module module) {
+            this.module = module;
+        }
+
+        abstract public void onModulePrepared();
+
+        public Module getModule() {
+            return module;
+        }
+
+        public List<VirtualFile> getResources() {
+            return resources;
+        }
+
+        public VirtualFile getPojoBinDirectory() {
+            return pojoBinDirectory;
+        }
+
+        public VirtualFile getSeamBinDirectory() {
+            return seamBinDirectory;
+        }
+
+        public void onResourcesPrepared(List<VirtualFile> resources) {
+            this.resources = resources;
+            resourcesDone = true;
+            checkDone();
+        }
+
+        public void onCompiledClassesPrepared(VirtualFile pojoBinDirectory) {
+            this.pojoBinDirectory = pojoBinDirectory;
+            seamClassesDone = true;
+            checkDone();
+        }
+
+        public void onSeamClassesPrepared(VirtualFile seamBinDirectory) {
+            this.seamBinDirectory = seamBinDirectory;
+            compiledClassesDone = true;
+            checkDone();
+        }
+
+        private void checkDone() {
+            if (resourcesDone && compiledClassesDone && seamClassesDone) {
+                onModulePrepared();
+            }
+        }
+    }
 }
